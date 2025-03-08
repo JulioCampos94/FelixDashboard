@@ -5,6 +5,7 @@
 
   import { t } from 'svelte-i18n';
 
+  // Initialize empty transaction data or with existing transaction values
   let transactionData = {
     transaction_id: '',
     sender_whatsapp: '',
@@ -21,6 +22,7 @@
 
   $: buttonText = transaction ? $t('save') : $t('addTransaction');
 
+  // If editing an existing transaction, populate the form fields
   if (transaction && typeof transaction === 'object') {
     // @ts-ignore
     transactionData = { ...transaction };
