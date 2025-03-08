@@ -5,20 +5,19 @@
   import { t } from 'svelte-i18n';
   import { locale } from 'svelte-i18n';
 
-  let transactions = [];
+  let transactions = []; 
   let filteredTransactions = [];
-  let searchQuery = "";
+  let searchQuery = ""; 
   let statusFilter = "";
-  let startDate = "";
-  let endDate = "";
-  let currentPage = 1;
-  let itemsPerPage = 10;
-  let selectedTransaction = null;
-  let selectedAction = null;
-  let showModal = false;
-  let currentLocate;
+  let startDate = ""; 
+  let endDate = ""; 
+  let currentPage = 1; 
+  let itemsPerPage = 10; 
+  let selectedTransaction = null; 
+  let selectedAction = null; 
+  let showModal = false; 
 
-  $: currentLocale = $locale;
+  $: currentLocale = $locale; // Reactive variable for the current locale
 
   function switchToEnglish() {
     locale.set('en');
@@ -28,48 +27,49 @@
     locale.set('es');
   }
 
+  // Fetch transactions from API
   async function fetchTransactions() {
     try {
       const response = await fetch("https://67c661b6351c081993fd057f.mockapi.io/api/mockTransaction/transactions");
       transactions = await response.json();
-      applyFilters();
+      applyFilters(); 
     } catch (error) {
       console.error("Error fetching transactions:", error);
     }
   }
 
+  // Save or update a transaction
   function handleTransactionSave(updatedTransaction) {
     const index = transactions.findIndex(tx => tx.transaction_id === updatedTransaction.transaction_id);
     if (index !== -1) {
-      transactions[index] = updatedTransaction;
+      transactions[index] = updatedTransaction; // Update existing transaction
     } else {
-      transactions.push(updatedTransaction);
+      transactions.push(updatedTransaction); // Add new transaction
     }
-    applyFilters();
+    applyFilters(); 
   }
 
-  onMount(fetchTransactions);
+  onMount(fetchTransactions); // Fetch transactions when component mounts
 
   function formatDate(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleString();
+    return date.toLocaleString(); 
   }
 
+  // Apply filters 
   function applyFilters() {
     filteredTransactions = transactions.filter(tx => {
-      const matchSearch = tx.transaction_id.includes(searchQuery) ||
-                          String(tx.sender_whatsapp).includes(searchQuery) ||
+      const matchSearch = tx.transaction_id.includes(searchQuery) || 
+                          String(tx.sender_whatsapp).includes(searchQuery) || 
                           String(tx.receiver_whatsapp).includes(searchQuery);
-
+                          
       const matchStatus = statusFilter ? tx.status === statusFilter : true;
-
-      const matchDate = (startDate && endDate) ?
-                        (new Date(tx.date) >= new Date(startDate) && new Date(tx.date) <= new Date(endDate)) :
+      const matchDate = (startDate && endDate) ? 
+                        (new Date(tx.date) >= new Date(startDate) && new Date(tx.date) <= new Date(endDate)) : 
                         true;
-
-      return matchSearch && matchStatus && matchDate;
+      return matchSearch && matchStatus && matchDate; // Return only matching transactions
     });
-    currentPage = 1;
+    currentPage = 1; // Reset to first page after applying filters
   }
 
   function clearFilters() {
@@ -77,7 +77,7 @@
     statusFilter = "";
     startDate = "";
     endDate = "";
-    applyFilters();
+    applyFilters(); 
   }
 
   function openTransactionDetail(tx) {
@@ -88,8 +88,9 @@
     selectedTransaction = null;
   }
 
+  // Paginate filtered transactions
   $: paginatedTransactions = filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
+  
   function nextPage() {
     if (currentPage < Math.ceil(filteredTransactions.length / itemsPerPage)) {
       currentPage++;
@@ -102,6 +103,7 @@
     }
   }
 
+  // Delete a transaction by its ID
   async function deleteTransaction(id) {
     try {
       const response = await fetch(`https://67c661b6351c081993fd057f.mockapi.io/api/mockTransaction/transactions/${id}`, {
@@ -109,13 +111,14 @@
       });
       if (response.ok) {
         transactions = transactions.filter(tx => tx.transaction_id !== id);
-        applyFilters();
+        applyFilters(); // Reapply filters after deletion
       }
     } catch (error) {
       console.error('Error deleting transaction:', error);
     }
   }
 
+  // Open modal for transaction action (edit or delete)
   function openModal(tx = null) {
     selectedAction = tx;
     showModal = true;
@@ -127,8 +130,8 @@
   }
 </script>
 
-
 <div class="container">
+
   <div class="filters">
     <div class="filter-group">
       <label for="searchQuery">{$t('whatsapp')}</label>
@@ -149,7 +152,6 @@
       <label for="startDate">{$t('from')}</label>
       <input id="startDate" type="date" bind:value={startDate} on:change={applyFilters} />
     </div>
-
     <div class="filter-group">
       <label for="endDate">{$t('to')}</label>
       <input id="endDate" type="date" bind:value={endDate} on:change={applyFilters} />
@@ -159,12 +161,11 @@
   <div class="clear-button-container">
     <button class="clear" on:click={clearFilters}>{$t('filters')}</button>
     <button class="add" on:click={() => openModal()}>{$t('addTransaction')}</button>
-      {#if currentLocale === 'es'}
-        <button class="language" on:click={switchToEnglish}>{$t('english')}</button>
-      {:else}
-        <button class="language" on:click={switchToSpanish}>{$t('spanish')}</button>
-      {/if}
-   
+    {#if currentLocale === 'es'}
+      <button class="language" on:click={switchToEnglish}>{$t('english')}</button>
+    {:else}
+      <button class="language" on:click={switchToSpanish}>{$t('spanish')}</button>
+    {/if}
   </div>
 
   <table>
@@ -212,10 +213,12 @@
     <button on:click={nextPage} disabled={currentPage >= Math.ceil(filteredTransactions.length / itemsPerPage)}>{$t('next')}</button>
   </div>
 
+  <!-- Transaction detail modal -->
   {#if selectedTransaction}
   <TransactionDetail transaction={selectedTransaction || {}} closeModal={closeTransactionDetail} />
   {/if}
 
+  <!-- Transaction action modal -->
   {#if showModal}
     <TransactionActions 
       transaction={selectedAction} 
