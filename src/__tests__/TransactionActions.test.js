@@ -3,27 +3,30 @@ import { vi, describe, it, beforeAll, afterAll, expect } from 'vitest';
 import TransactionActions from '../components/TransactionActions/TransactionActions.svelte';
 import { locale } from 'svelte-i18n';
 
-
+// Mocking Svelte's onMount function to avoid it being called during tests
 vi.mock('svelte', () => ({
   ...vi.importActual('svelte'),
   onMount: vi.fn(),
 }));
 
+// Test suite for the 'TransactioAction' component
 describe('TransactionActions', () => {
   let closeModal;
   let onSave;
 
   beforeAll(() => {
-    locale.set('en');
-    closeModal = vi.fn();
-    onSave = vi.fn();
+    locale.set('en'); 
+    closeModal = vi.fn(); 
+    onSave = vi.fn(); 
   });
 
+  // Test to check if the modal renders with default values when no transaction is passed
   it('renders modal with default values when no transaction is passed', async () => {
     render(TransactionActions, {
       props: { closeModal, onSave }
     });
 
+    // Verify that elements display default values for a new transaction
     expect(screen.getByText('Add New Transaction')).toBeInTheDocument();
     expect(screen.getByLabelText('Sender Whatsapp')).toHaveValue('');
     expect(screen.getByLabelText('Receiver Whatsapp')).toHaveValue('');
@@ -35,6 +38,7 @@ describe('TransactionActions', () => {
     expect(screen.getByLabelText('Date')).toHaveValue(new Date().toISOString().split('T')[0]);
   });
 
+  // Test to check if the modal renders correctly when transaction data is passed as a prop
   it('renders modal with transaction data when transaction prop is passed', async () => {
     const transaction = {
       transaction_id: '1',
@@ -63,6 +67,7 @@ describe('TransactionActions', () => {
     expect(screen.getByLabelText('Date')).toHaveValue(transaction.date);
   });
 
+  // Test to check if onSave is called with correct data when saving a new transaction
   it('calls onSave with correct data when saving a new transaction', async () => {
     const transactionData = {
       transaction_id: '',
@@ -76,6 +81,7 @@ describe('TransactionActions', () => {
       date: '2025-03-01',
     };
 
+    // Mock the global fetch function to simulate a successful API response
     global.fetch = vi.fn().mockResolvedValue({
       json: vi.fn().mockResolvedValue(transactionData),
       ok: true,
@@ -104,6 +110,7 @@ describe('TransactionActions', () => {
     expect(closeModal).toHaveBeenCalled();
   });
 
+  // Test to check if onSave is called with correct data when saving an edited transaction
   it('calls onSave with correct data when saving an edited transaction', async () => {
     const transaction = {
       transaction_id: '1',
@@ -145,6 +152,7 @@ describe('TransactionActions', () => {
     expect(closeModal).toHaveBeenCalled();
   });
 
+  // Test to check if closeModal is called when the cancel button is clicked
   it('calls closeModal when cancel button is clicked', async () => {
     render(TransactionActions, { props: { closeModal, onSave } });
 

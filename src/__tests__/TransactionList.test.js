@@ -3,16 +3,19 @@ import { vi, describe, it, beforeAll, expect, afterAll } from 'vitest';
 import TransactionList from '../components/TransactionList/TransactionList.svelte';
 import { locale } from 'svelte-i18n';
 
+// Mocking Svelte's onMount function to avoid it being called during tests
 vi.mock('svelte', () => ({
   ...vi.importActual('svelte'),
   onMount: vi.fn(),
 }));
 
+// Test suite for the 'TransactionList' component
 describe('TransactionList', () => {
   let fetchMock;
 
   beforeAll(() => {
     locale.set('en');
+    // Mock the global fetch function to simulate a successful API response
     fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue({
       json: vi.fn().mockResolvedValue([
         {
@@ -43,53 +46,59 @@ describe('TransactionList', () => {
       arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
       text: vi.fn().mockResolvedValue(''),
       blob: vi.fn().mockResolvedValue(new Blob([])),
-      formData: vi.fn().mockResolvedValue(new FormData()),  // Added formData mock
+      formData: vi.fn().mockResolvedValue(new FormData()),
     });
   });
 
+  // Restore mocked functions after all tests
   afterAll(() => {
-    vi.restoreAllMocks();
+    vi.restoreAllMocks(); 
   });
 
+  // Test to check if transactions are fetched and displayed correctly
   it('fetches and displays transactions correctly', async () => {
-    render(TransactionList);
-    await waitFor(() => screen.getByText('1'));
+    render(TransactionList); 
+    await waitFor(() => screen.getByText('1')); 
     expect(screen.getByText('1')).toBeInTheDocument();
     expect(screen.getByText('+123456789')).toBeInTheDocument();
     expect(screen.getByText('Completed')).toBeInTheDocument();
   });
 
+  // Test to check if the transactions are filtered by the search query
   it('filters transactions by search query', async () => {
     render(TransactionList);
-    await waitFor(() => screen.getByText('1'));
+    await waitFor(() => screen.getByText('1')); 
     const searchInput = screen.getByLabelText('Whatsapp');
-    await fireEvent.input(searchInput, { target: { value: '+123456789' } });
+    await fireEvent.input(searchInput, { target: { value: '+123456789' } }); 
     expect(screen.getByText('1')).toBeInTheDocument();
     expect(screen.queryByText('2')).not.toBeInTheDocument();
   });
 
+  // Test to check if the language changes to Spanish
   it('changes language to Spanish', async () => {
     render(TransactionList);
-    const spanishButton = screen.getByText('Spanish');
+    const spanishButton = screen.getByText('Spanish'); 
     await fireEvent.click(spanishButton);
     expect(locale).toHaveProperty('current', 'es');
   });
 
+  // Test to check if pagination works correctly for navigating through transactions
   it('navigates through paginated transactions', async () => {
-    render(TransactionList);
-    await waitFor(() => screen.getByText('1'));
+    render(TransactionList); 
+    await waitFor(() => screen.getByText('1')); 
     const nextButton = screen.getByText('Next');
     await fireEvent.click(nextButton);
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
+  // Test to check if a transaction can be deleted
   it('deletes a transaction', async () => {
-    render(TransactionList);
-    await waitFor(() => screen.getByText('1'));
+    render(TransactionList); 
+    await waitFor(() => screen.getByText('1')); 
     const deleteButton = screen.getByText('Delete');
     await fireEvent.click(deleteButton);
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/transactions/1'),
+      expect.stringContaining('/transactions/1'), 
       expect.objectContaining({ method: 'DELETE' })
     ));
     expect(screen.queryByText('1')).not.toBeInTheDocument();
